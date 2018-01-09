@@ -27,7 +27,8 @@ function() {
 
 add-zsh-hook precmd _zsh_kubectl_prompt_precmd
 function _zsh_kubectl_prompt_precmd() {
-    local kubeconfig kubedir updated_at now context namespace ns separator modified_time_fmt
+    local kubeconfig kubedir updated_at now context namespace ns separator modified_time_fmt _newline
+    _newline=$'\n'
 
     kubeconfig="$HOME/.kube/config"
     kubedir="$HOME/.kube"
@@ -37,7 +38,7 @@ function _zsh_kubectl_prompt_precmd() {
 
     zstyle -s ':zsh-kubectl-prompt:' modified_time_fmt modified_time_fmt
     if ! now="$(stat $modified_time_fmt "$kubedir" 2>/dev/null)"; then
-        ZSH_KUBECTL_PROMPT="kubeconfig is not found"
+        ZSH_KUBECTL_PROMPT=""
         return 1
     fi
 
@@ -48,13 +49,13 @@ function _zsh_kubectl_prompt_precmd() {
     zstyle ':zsh-kubectl-prompt:' updated_at "$now"
 
     if ! context="$(kubectl config current-context 2>/dev/null)"; then
-        ZSH_KUBECTL_PROMPT="current-context is not set"
+        ZSH_KUBECTL_PROMPT=""
         return 1
     fi
 
     zstyle -s ':zsh-kubectl-prompt:' namespace namespace
     if [[ "$namespace" != true ]]; then
-        ZSH_KUBECTL_PROMPT="${context}"
+        ZSH_KUBECTL_PROMPT="(${context})%{${_newline}%}"
         return 0
     fi
 
@@ -62,7 +63,7 @@ function _zsh_kubectl_prompt_precmd() {
     [[ -z "$ns" ]] && ns="default"
 
     zstyle -s ':zsh-kubectl-prompt:' separator separator
-    ZSH_KUBECTL_PROMPT="${context}${separator}${ns}"
+    ZSH_KUBECTL_PROMPT="(${context}${separator}${ns})%{${_newline}%}"
 
     return 0
 }
